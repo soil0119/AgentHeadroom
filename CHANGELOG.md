@@ -9,7 +9,7 @@
 - Add public Adapter Protocol v1 with multi-provider, multi-account, and multi-window snapshots.
 - Show the tightest remaining quota as the tray headline and reset events in chronological order.
 - Add a native-positioned tray popover with provider/account progress bars and quick controls.
-- Add the original Roomie status mascot.
+- Add a neutral system-style gauge icon and compact platform-native visual language.
 - Add `AGENT_HEADROOM_CODEX_PATH` while retaining previous Codex path overrides.
 
 ## 0.1.0 — 2026-09-13

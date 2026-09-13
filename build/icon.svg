@@ -1,17 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#7884ff"/>
-      <stop offset="1" stop-color="#4853d6"/>
-    </linearGradient>
-  </defs>
-  <rect width="1024" height="1024" rx="224" fill="#111522"/>
-  <path d="M512 230V130l120-55" fill="none" stroke="#aeb6ff" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="650" cy="66" r="38" fill="#e8ebff"/>
-  <rect x="156" y="220" width="712" height="630" rx="210" fill="url(#body)"/>
-  <rect x="228" y="318" width="568" height="374" rx="150" fill="#252a48"/>
-  <circle cx="366" cy="457" r="54" fill="#f7f8ff"/>
-  <circle cx="658" cy="457" r="54" fill="#f7f8ff"/>
-  <path d="M350 570Q512 705 674 570" fill="none" stroke="#f7f8ff" stroke-width="45" stroke-linecap="round"/>
-  <rect x="348" y="782" width="328" height="60" rx="30" fill="#aeb6ff"/>
+  <rect x="32" y="32" width="960" height="960" rx="216" fill="#f1f1f3"/>
+  <rect x="33" y="33" width="958" height="958" rx="215" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="2"/>
+  <circle cx="512" cy="512" r="266" fill="none" stroke="#c7c7cc" stroke-width="76"/>
+  <circle cx="512" cy="512" r="266" fill="none" stroke="#303033" stroke-width="76" stroke-linecap="round" stroke-dasharray="1114 558" transform="rotate(-90 512 512)"/>
+  <circle cx="512" cy="512" r="38" fill="#303033"/>
 </svg>

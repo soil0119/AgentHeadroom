@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -9,6 +9,7 @@ import {
   ipcMain,
   Menu,
   nativeImage,
+  safeStorage,
   screen,
   shell,
   Tray,
@@ -24,6 +25,7 @@ import {
   readClaudeSnapshot,
   removeClaudeConnector,
 } from "./claude-connector.mjs";
+import { fetchCursorTeamSpend } from "./cursor-connector.mjs";
 import {
   adapterSnapshotRows,
   lowestHeadroom,
@@ -33,6 +35,8 @@ import {
 } from "./providers.mjs";
 
 const REFRESH_INTERVAL_MS = 60_000;
+const CURSOR_REFRESH_INTERVAL_MS = 15 * 60_000;
+const DASHBOARD_WIDTH = 390;
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
 let isKorean = false;
@@ -59,6 +63,10 @@ let codexError;
 let lastUpdated;
 let claudeSnapshot;
 let claudeConnectorInstalled = false;
+let cursorSnapshot;
+let cursorError;
+let cursorConnectorInstalled = false;
+let cursorLastRefreshAt = 0;
 let adapterSnapshots = [];
 let adapterErrors = [];
 
@@ -87,6 +95,54 @@ function claudeBridgeScriptPath() {
   return path.join(app.getPath("home"), ".claude", "agent-headroom-statusline.cjs");
 }
 
+function cursorKeyPath() {
+  return path.join(connectorsPath(), "cursor-team-key.bin");
+}
+
+async function secureStorageAvailable() {
+  if (!(await safeStorage.isAsyncEncryptionAvailable())) return false;
+  return process.platform !== "linux" || safeStorage.getSelectedStorageBackend() !== "basic_text";
+}
+
+async function requireSecureStorage() {
+  if (!(await secureStorageAvailable())) {
+    throw new Error("운영체제의 안전한 자격 증명 저장소를 사용할 수 없어 Cursor 연결을 저장하지 않았습니다.");
+  }
+}
+
+async function saveCursorKey(apiKey) {
+  await requireSecureStorage();
+  await mkdir(connectorsPath(), { recursive: true });
+  const encrypted = await safeStorage.encryptStringAsync(apiKey.trim());
+  await writeFile(cursorKeyPath(), encrypted, { mode: 0o600 });
+}
+
+async function readCursorKey() {
+  await requireSecureStorage();
+  const encrypted = await readFile(cursorKeyPath());
+  const decrypted = await safeStorage.decryptStringAsync(encrypted);
+  if (decrypted.shouldReEncrypt) await saveCursorKey(decrypted.result);
+  return decrypted.result;
+}
+
+async function isCursorConnectorInstalled() {
+  try {
+    await readFile(cursorKeyPath());
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+async function removeCursorKey() {
+  try {
+    await unlink(cursorKeyPath());
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
 async function nodeExecutable() {
   const candidate = process.env.AGENT_HEADROOM_NODE_PATH || "node";
   try {
@@ -102,33 +158,53 @@ function rows() {
   const claudeRow = claudeSnapshot
     ? adapterSnapshotRows([claudeSnapshot])[0]
     : null;
+  const cursorRow = cursorSnapshot
+    ? adapterSnapshotRows([cursorSnapshot])[0]
+    : null;
   const builtIns = catalog.map((provider) => {
-    if (provider.id !== "claude") return provider;
-    if (!claudeRow) return { ...provider, connectorInstalled: claudeConnectorInstalled };
-    return {
-      ...claudeRow,
-      id: "claude",
-      mode: "automatic",
-      connectorInstalled: claudeConnectorInstalled,
-    };
+    if (provider.id === "claude") {
+      if (!claudeRow) return { ...provider, connectorInstalled: claudeConnectorInstalled };
+      return {
+        ...claudeRow,
+        id: "claude",
+        mode: "automatic",
+        connectorInstalled: claudeConnectorInstalled,
+      };
+    }
+    if (provider.id === "cursor") {
+      if (!cursorRow) {
+        return {
+          ...provider,
+          mode: cursorConnectorInstalled ? "automatic" : provider.mode,
+          connectorInstalled: cursorConnectorInstalled,
+          error: cursorError,
+        };
+      }
+      return {
+        ...cursorRow,
+        id: "cursor",
+        mode: "automatic",
+        connectorInstalled: cursorConnectorInstalled,
+        error: cursorError,
+      };
+    }
+    return provider;
   });
   return [...builtIns, ...adapterSnapshotRows(adapterSnapshots)];
 }
 
 function iconSvg(value, failed = false, showNumber = true) {
-  const display = failed ? "!" : (Number.isFinite(value) ? String(value) : "··");
-  const fontSize = display.length >= 3 ? 24 : 30;
-  const accent = failed || value < 15 ? "#E5484D" : value < 35 ? "#E99B3A" : "#5865F2";
-  const eyes = failed || value < 15
-    ? '<path d="M15 26 L22 22 M42 22 L49 26" stroke="white" stroke-width="3" stroke-linecap="round"/>'
-    : '<circle cx="19" cy="24" r="3" fill="white"/><circle cx="45" cy="24" r="3" fill="white"/>';
+  const available = Number.isFinite(value);
+  const display = failed ? "!" : available ? String(value) : "—";
+  const fontSize = display.length >= 3 ? 18 : 22;
+  const accent = failed || value < 15 ? "#B42318" : value < 35 ? "#9A6700" : "#25272A";
+  const circumference = 2 * Math.PI * 22;
+  const filled = available ? circumference * Math.max(0, Math.min(100, value)) / 100 : 0;
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-      <path d="M32 9 V4 M32 4 L40 1" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>
-      <rect x="4" y="10" width="56" height="${showNumber ? 51 : 46}" rx="17" fill="${accent}"/>
-      ${eyes}
-      ${showNumber ? `<text x="32" y="51" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
-        font-size="${fontSize}" font-weight="700" fill="white">${display}</text>` : '<path d="M18 39 Q32 49 46 39" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>'}
+      <circle cx="32" cy="32" r="22" fill="none" stroke="${accent}" stroke-opacity=".24" stroke-width="6"/>
+      ${available ? `<circle cx="32" cy="32" r="22" fill="none" stroke="${accent}" stroke-width="6" stroke-linecap="round" transform="rotate(-90 32 32)" stroke-dasharray="${filled} ${circumference - filled}"/>` : ""}
+      ${showNumber || failed ? `<text x="32" y="39" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="${fontSize}" font-weight="650" fill="${accent}">${display}</text>` : '<path d="M25 32h14" fill="none" stroke="#25272A" stroke-width="5" stroke-linecap="round"/>'}
     </svg>`;
 }
 
@@ -244,7 +320,19 @@ function updateTray() {
   dashboardWindow?.webContents.send("dashboard:changed");
 }
 
-async function refresh() {
+async function refreshCursor(force = false) {
+  if (!cursorConnectorInstalled) return;
+  if (!force && Date.now() - cursorLastRefreshAt < CURSOR_REFRESH_INTERVAL_MS) return;
+  try {
+    cursorSnapshot = await fetchCursorTeamSpend({ apiKey: await readCursorKey() });
+    cursorError = null;
+    cursorLastRefreshAt = Date.now();
+  } catch (error) {
+    cursorError = error.message;
+  }
+}
+
+async function refresh(force = false) {
   if (refreshing) return;
   refreshing = true;
   rebuildMenu();
@@ -255,6 +343,7 @@ async function refresh() {
   } catch (error) {
     codexError = error.message;
   } finally {
+    await refreshCursor(force);
     try {
       claudeSnapshot = await readClaudeSnapshot(claudeSnapshotPath());
       const manifests = await loadAdapterManifests(adaptersPath());
@@ -317,7 +406,7 @@ function positionDashboard() {
 function createDashboard() {
   if (dashboardWindow && !dashboardWindow.isDestroyed()) return dashboardWindow;
   dashboardWindow = new BrowserWindow({
-    width: 420,
+    width: DASHBOARD_WIDTH,
     height: 520,
     show: false,
     frame: false,
@@ -360,7 +449,7 @@ function toggleDashboard() {
 function registerIpc() {
   ipcMain.handle("dashboard:get", () => dashboardData());
   ipcMain.handle("dashboard:refresh", async () => {
-    await refresh();
+    await refresh(true);
     return dashboardData();
   });
   ipcMain.handle("dashboard:open-settings", () => {
@@ -371,7 +460,7 @@ function registerIpc() {
   ipcMain.handle("dashboard:resize", (_event, { height }) => {
     if (!dashboardWindow || dashboardWindow.isDestroyed()) return;
     const safeHeight = Math.max(250, Math.min(720, Math.ceil(Number(height) || 520)));
-    dashboardWindow.setSize(420, safeHeight, false);
+    dashboardWindow.setSize(DASHBOARD_WIDTH, safeHeight, false);
     positionDashboard();
   });
   ipcMain.handle("providers:get", () => rows());
@@ -402,6 +491,26 @@ function registerIpc() {
     });
     claudeConnectorInstalled = false;
     claudeSnapshot = null;
+    updateTray();
+    return rows();
+  });
+  ipcMain.handle("connectors:cursor-install", async (_event, { apiKey }) => {
+    await requireSecureStorage();
+    const snapshot = await fetchCursorTeamSpend({ apiKey });
+    await saveCursorKey(apiKey);
+    cursorSnapshot = snapshot;
+    cursorError = null;
+    cursorConnectorInstalled = true;
+    cursorLastRefreshAt = Date.now();
+    updateTray();
+    return rows();
+  });
+  ipcMain.handle("connectors:cursor-remove", async () => {
+    await removeCursorKey();
+    cursorConnectorInstalled = false;
+    cursorSnapshot = null;
+    cursorError = null;
+    cursorLastRefreshAt = 0;
     updateTray();
     return rows();
   });
@@ -460,6 +569,7 @@ if (claudeBridgeMode) {
       app.setAppUserModelId("dev.agentheadroom.app");
     }
     claudeConnectorInstalled = await isClaudeConnectorInstalled(claudeMarkerPath());
+    cursorConnectorInstalled = await isCursorConnectorInstalled();
     registerIpc();
     tray = new Tray(makeIcon(null));
     tray.setToolTip(text.loading);

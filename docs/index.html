@@ -6,37 +6,40 @@
     <meta name="description" content="모든 AI 에이전트의 남은 사용량을 하나의 메뉴바와 시스템 트레이에서 비교하세요." />
     <title>AgentHeadroom — Every agent, one headroom number</title>
     <style>
-      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
       * { box-sizing: border-box; }
-      body { margin: 0; min-height: 100vh; color: #f7f7f7; background: radial-gradient(circle at 50% -10%, #29324d 0, #0d1018 38%, #050609 72%); }
-      main { width: min(980px, calc(100% - 40px)); margin: 0 auto; padding: 88px 0 64px; text-align: center; }
-      .badge { display: inline-flex; gap: 8px; align-items: center; padding: 7px 12px; border: 1px solid #343a4a; border-radius: 999px; color: #b9c3d8; background: #151924aa; font-size: 13px; }
-      h1 { margin: 26px 0 14px; font-size: clamp(48px, 9vw, 88px); letter-spacing: -0.06em; }
-      .lead { max-width: 700px; margin: 0 auto; color: #aeb6c5; font-size: clamp(18px, 2.4vw, 24px); line-height: 1.55; }
-      .actions { display: flex; justify-content: center; gap: 12px; margin: 32px 0 62px; flex-wrap: wrap; }
+      body { margin: 0; min-height: 100vh; color: #1d1d1f; background: #f5f5f7; -webkit-font-smoothing: antialiased; }
+      main { width: min(940px, calc(100% - 40px)); margin: 0 auto; padding: 76px 0 56px; text-align: center; }
+      .eyebrow { color: #6e6e73; font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+      h1 { margin: 18px 0 12px; font-size: clamp(46px, 8vw, 76px); font-weight: 650; letter-spacing: -0.055em; }
+      .lead { max-width: 660px; margin: 0 auto; color: #6e6e73; font-size: clamp(17px, 2.2vw, 22px); line-height: 1.5; }
+      .actions { display: flex; justify-content: center; gap: 10px; margin: 30px 0 58px; flex-wrap: wrap; }
       a { color: inherit; text-decoration: none; }
-      .button { padding: 12px 18px; border-radius: 12px; border: 1px solid #3c4354; font-weight: 650; background: #161a24; }
-      .button.primary { color: #0b1017; border-color: #ffffff; background: #ffffff; }
-      .mac { max-width: 680px; margin: 0 auto; overflow: hidden; border: 1px solid #353b4b; border-radius: 22px; background: #121621cc; box-shadow: 0 30px 100px #00000080; text-align: left; }
-      .menubar { display: flex; justify-content: flex-end; gap: 17px; padding: 11px 18px; border-bottom: 1px solid #2a3040; background: #07090e; font-size: 14px; }
-      .meter { padding: 24px; }
+      .button { padding: 10px 16px; border-radius: 8px; border: 1px solid #d2d2d7; font-size: 14px; font-weight: 600; background: #fff; }
+      .button.primary { color: #fff; border-color: #0071e3; background: #0071e3; }
+      .mac { max-width: 620px; margin: 0 auto; overflow: hidden; border: 1px solid #d2d2d7; border-radius: 16px; background: rgba(255,255,255,.9); box-shadow: 0 18px 50px rgba(0,0,0,.12); text-align: left; }
+      .menubar { display: flex; justify-content: flex-end; gap: 15px; padding: 9px 16px; border-bottom: 1px solid #e5e5e7; background: #fff; color: #3a3a3c; font-size: 12px; }
+      .gauge { display: inline-block; width: 12px; height: 12px; margin-right: 4px; border: 2px solid #3a3a3c; border-left-color: #c7c7cc; border-radius: 50%; vertical-align: -2px; }
+      .meter { padding: 22px 24px 24px; }
       .meter-head { display: flex; align-items: baseline; justify-content: space-between; }
-      .percent { font-size: 42px; font-weight: 750; }
-      .row { margin-top: 22px; }
-      .row-label { display: flex; justify-content: space-between; color: #c5ccda; font-size: 14px; }
-      .track { height: 8px; margin-top: 8px; border-radius: 999px; background: #2a3040; overflow: hidden; }
-      .fill { width: 82%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7c8cff, #b8c2ff); }
+      .meter-head small { color: #86868b; }
+      .percent { font-size: 32px; font-weight: 600; letter-spacing: -.04em; }
+      .row { margin-top: 20px; }
+      .row-label { display: flex; justify-content: space-between; color: #6e6e73; font-size: 12px; }
+      .row-label strong { color: #1d1d1f; }
+      .track { height: 4px; margin-top: 8px; border-radius: 2px; background: #e5e5e7; overflow: hidden; }
+      .fill { width: 82%; height: 100%; border-radius: inherit; background: #74777b; }
       .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 64px; text-align: left; }
-      .feature { padding: 22px; border: 1px solid #262c3a; border-radius: 16px; background: #10131bcc; }
+      .feature { padding: 20px; border: 1px solid #e0e0e3; border-radius: 12px; background: #fff; }
       .feature h2 { margin: 0 0 8px; font-size: 17px; }
-      .feature p { margin: 0; color: #929bad; line-height: 1.55; font-size: 14px; }
-      footer { margin-top: 56px; color: #70798b; font-size: 13px; }
+      .feature p { margin: 0; color: #6e6e73; line-height: 1.55; font-size: 13px; }
+      footer { margin-top: 52px; color: #86868b; font-size: 12px; }
       @media (max-width: 680px) { main { padding-top: 56px; } .features { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
     <main>
-      <div class="badge">● macOS · Windows · Linux</div>
+      <div class="eyebrow">macOS · Windows · Linux</div>
       <h1>AgentHeadroom</h1>
       <p class="lead">Every agent. Every account. One headroom number.<br />가장 먼저 고갈될 AI 한도와 다음 리셋을 메뉴바와 시스템 트레이에서 확인하세요.</p>
       <div class="actions">
@@ -45,11 +48,11 @@
       </div>
 
       <section class="mac" aria-label="AgentHeadroom preview">
-        <div class="menubar"><span>🤖 21%</span><span>9월 13일 (일) 오후 5:34</span></div>
+        <div class="menubar"><span><i class="gauge"></i>21%</span><span>9월 13일 (일) 오후 5:34</span></div>
         <div class="meter">
           <div class="meter-head"><div><strong>AgentHeadroom</strong><br /><small>가장 빠른 고갈 · Claude Team</small></div><div class="percent">21%</div></div>
           <div class="row"><div class="row-label"><span>OpenAI Codex · Personal</span><strong>77% 남음</strong></div><div class="track"><div class="fill" style="width:77%"></div></div></div>
-          <div class="row"><div class="row-label"><span>Claude Code · Team</span><strong>21% 남음</strong></div><div class="track"><div class="fill" style="width:21%;background:linear-gradient(90deg,#e56b63,#ff9c85)"></div></div></div>
+          <div class="row"><div class="row-label"><span>Claude Code · Team</span><strong>21% 남음</strong></div><div class="track"><div class="fill" style="width:21%;background:#c8443a"></div></div></div>
           <div class="row"><div class="row-label"><span>Grok · Personal</span><strong>64% 남음</strong></div><div class="track"><div class="fill" style="width:64%"></div></div></div>
         </div>
       </section>
@@ -59,7 +62,7 @@
         <div class="feature"><h2>자격 증명은 건드리지 않음</h2><p>로그인 토큰과 브라우저 쿠키를 읽지 않습니다. 공식 CLI/API와 명시적으로 설치한 로컬 자동 어댑터만 사용합니다.</p></div>
         <div class="feature"><h2>열린 어댑터 규격</h2><p>Codex, Claude, Grok뿐 아니라 사내 에이전트와 여러 개인·팀 계정도 JSON 어댑터 하나로 연결합니다.</p></div>
       </section>
-      <footer>Open source under the MIT License · Roomie is an original AgentHeadroom mascot.</footer>
+      <footer>Open source under the MIT License.</footer>
     </main>
   </body>
 </html>

@@ -11,10 +11,12 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 
 [Website](https://soil0119.github.io/AgentHeadroom/) · [Download](https://github.com/soil0119/AgentHeadroom/releases/latest) · [Adapter protocol](docs/adapter-spec.md)
 
+Contributions are welcome through pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md); `main` requires CI and only repository maintainers can merge.
+
 ## Why it is different
 
 - macOS, Windows, Linux에서 동일한 공급자 모델과 어댑터 규격 사용
-- 로그인 토큰, OS 자격 증명 저장소, 브라우저 쿠키를 직접 읽지 않음
+- 기존 로그인 토큰·OS 자격 증명·브라우저 쿠키를 뒤지지 않고, 사용자가 직접 연결한 키만 안전하게 저장
 - 공개 JSON 어댑터 규격으로 어떤 로컬 CLI나 사내 사용량 서비스도 연결
 - 공식 조회 수단이 있는 공급자는 자동 동기화하고, 그 외에는 명시적으로 설치한 로컬 자동 어댑터 사용
 - 수동 퍼센트 입력이나 추정값 없이 검증 가능한 자동 데이터만 표시
@@ -31,7 +33,7 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 | Claude Code | Automatic | 설정에서 연결하면 공식 status-line 입력의 5시간·주간 한도를 자동 수집 |
 | Gemini CLI | Automatic connector | 공식 `/stats model`의 안정적인 기계 판독 경로가 필요 |
 | GitHub Copilot | Automatic connector | 개인·조직 Billing API 연결 대상 |
-| Cursor | Automatic connector | 팀 Admin API 연결 대상; 개인 잔여 한도 API는 미공개 |
+| Cursor | Automatic | 팀 관리자가 직접 연결한 공식 Admin API로 모든 팀원의 월간 지출 여유를 자동 비교; 개인 플랜 API는 미공개 |
 | Grok / Windsurf | Automatic connector | 공식 조회 인터페이스가 공개되면 활성화 |
 | Any other agent | Local adapter | Adapter Protocol v1 자동 스냅샷만 허용 |
 
@@ -78,7 +80,7 @@ Build installers with `npm run dist:mac`, `npm run dist:win`, or `npm run dist:l
 
 ## Privacy and security
 
-AgentHeadroom itself never reads authentication tokens, browser cookies, chat transcripts, or OS credential stores. Codex data comes through the locally installed Codex CLI. Local adapters are executable programs, so install only adapters you trust and review their own privacy disclosures.
+AgentHeadroom never scans existing authentication tokens, browser cookies, chat transcripts, or unrelated OS credentials. Codex data comes through the locally installed Codex CLI. A Cursor Team Admin API key is accepted only when the user explicitly connects it, encrypted with Electron `safeStorage`, and rejected when a secure OS-backed store is unavailable. Local adapters are executable programs, so install only adapters you trust and review their own privacy disclosures.
 
 No analytics are included.
 
@@ -86,9 +88,13 @@ No analytics are included.
 
 설정에서 **Claude 자동 연결**을 누르면 AgentHeadroom이 `~/.claude/settings.json`의 빈 `statusLine` 슬롯에 가벼운 Node.js 브리지를 등록합니다. Claude Code가 첫 응답 후 공식적으로 전달하는 `rate_limits`만 로컬 스냅샷에 보관하며, transcript 경로·프롬프트·인증 정보는 저장하지 않습니다. 기존 status line이 있으면 덮어쓰지 않고 연결을 중단합니다. 연결 해제 시 AgentHeadroom이 추가한 설정·브리지·스냅샷만 제거합니다. Claude 자동 연결에는 `node` 실행 파일이 PATH에 있어야 합니다.
 
-## Roomie
+### Cursor Team automatic connection
 
-The tray mascot is **Roomie**, an original tiny robot whose color and expression reflect the tightest remaining quota. It does not reuse RunCat artwork, animation frames, name, or branding.
+팀 관리자가 설정에서 직접 Admin API 키를 연결하면 공식 `/teams/spend` 응답의 현재 결제 주기 지출액과 적용 중인 팀원별 한도를 사용해 남은 비율을 계산합니다. 모든 팀원을 별도 계정으로 표시하며 15분마다 갱신합니다. 키는 macOS Keychain, Windows DPAPI 또는 Linux의 libsecret/KWallet 계열 저장소를 통해 암호화합니다. Linux가 `basic_text` 저장소만 제공하면 연결하지 않습니다. 연결 해제 시 AgentHeadroom이 만든 암호화 키 파일만 삭제합니다.
+
+## Visual design
+
+AgentHeadroom uses a neutral system-style gauge and native platform typography. The interface intentionally avoids mascots, provider-brand mimicry, decorative gradients, and animated status characters.
 
 ## License
 
