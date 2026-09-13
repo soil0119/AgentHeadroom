@@ -21,7 +21,7 @@ npm run dist:linux
 ## Pull requests
 
 - Open a pull request against `main`; direct pushes are not accepted.
-- All required CI checks and one code-owner approval must pass before merge.
+- All required CI checks must pass before merge; merge access remains limited to repository maintainers.
 - New provider connectors must use a documented public API or CLI contract.
 - Never read browser cookies, provider session files, chat transcripts, or undocumented private endpoints.
 - Do not add manual or estimated quota values.

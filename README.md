@@ -11,7 +11,7 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 
 [Website](https://soil0119.github.io/AgentHeadroom/) · [Download](https://github.com/soil0119/AgentHeadroom/releases/latest) · [Adapter protocol](docs/adapter-spec.md)
 
-Contributions are welcome through reviewed pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md); `main` requires CI and code-owner approval.
+Contributions are welcome through pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md); `main` requires CI and only repository maintainers can merge.
 
 ## Why it is different
 
