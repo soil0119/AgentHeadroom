@@ -5,34 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AgentHeadroom Providers</title>
     <style>
-      :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      :root {
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --page: #f5f5f7;
+        --card: #ffffff;
+        --text: rgba(0, 0, 0, .88);
+        --secondary: rgba(0, 0, 0, .50);
+        --border: rgba(0, 0, 0, .10);
+        --hover: rgba(0, 0, 0, .05);
+      }
       * { box-sizing: border-box; }
-      body { margin: 0; padding: 24px; background: Canvas; color: CanvasText; }
-      h1 { margin: 0; font-size: 22px; }
-      .intro { margin: 7px 0 20px; color: color-mix(in srgb, CanvasText 62%, transparent); font-size: 13px; line-height: 1.5; }
-      #providers { display: grid; gap: 10px; }
-      .provider { display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; padding: 14px; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-radius: 12px; }
-      .name { font-weight: 700; }
-      .meta { margin-top: 4px; color: color-mix(in srgb, CanvasText 58%, transparent); font-size: 12px; }
-      .value { align-self: center; font-size: 24px; font-weight: 750; font-variant-numeric: tabular-nums; }
+      body { margin: 0; background: var(--page); color: var(--text); -webkit-font-smoothing: antialiased; }
+      .page { width: min(100%, 620px); margin: 0 auto; padding: 28px 24px 32px; }
+      .top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+      .top-copy { flex: 1; }
+      h1 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.02em; }
+      .intro { margin: 5px 0 0; color: var(--secondary); font-size: 12px; line-height: 1.45; }
+      #providers { display: grid; gap: 8px; }
+      .provider { display: grid; grid-template-columns: 1fr auto; gap: 9px 16px; padding: 14px 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); box-shadow: 0 1px 1px rgba(0, 0, 0, .025); }
+      .name { font-size: 13px; font-weight: 600; }
+      .meta { margin-top: 4px; color: var(--secondary); font-size: 11px; line-height: 1.4; }
+      .value { align-self: center; font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
       .actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      input { min-width: 0; padding: 8px 10px; border: 1px solid color-mix(in srgb, CanvasText 20%, transparent); border-radius: 8px; background: Canvas; color: CanvasText; }
+      input { min-width: 0; height: 30px; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; outline: none; background: var(--card); color: var(--text); font: inherit; font-size: 11px; }
+      input:focus { border-color: rgba(0, 122, 255, .65); box-shadow: 0 0 0 2px rgba(0, 122, 255, .12); }
       .cursor-key { flex: 1 1 230px; }
-      button { padding: 8px 11px; border: 0; border-radius: 8px; background: #5b66e8; color: white; cursor: pointer; font-weight: 650; }
-      button.secondary { border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); background: transparent; color: CanvasText; }
-      button.danger { background: transparent; color: #e5484d; }
-      .toolbar { display: flex; margin: 0 0 18px; }
-      .notice { margin-top: 18px; color: color-mix(in srgb, CanvasText 55%, transparent); font-size: 12px; line-height: 1.5; }
-      .message { min-height: 18px; margin: 0 0 10px; color: #d84a52; font-size: 12px; }
+      button { height: 30px; padding: 0 10px; border: 1px solid rgba(0, 122, 255, .8); border-radius: 6px; background: #007aff; color: white; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; }
+      button:hover { filter: brightness(.97); }
+      button.secondary { border-color: var(--border); background: transparent; color: var(--text); }
+      button.secondary:hover { background: var(--hover); }
+      button.danger { border-color: transparent; background: transparent; color: #c9362b; }
+      .toolbar { flex: none; display: flex; }
+      .notice { margin: 16px 2px 0; color: var(--secondary); font-size: 10px; line-height: 1.5; }
+      .message { min-height: 17px; margin: 0 2px 8px; color: #c9362b; font-size: 11px; }
+      @media (prefers-color-scheme: dark) {
+        :root { --page: #1e1e20; --card: #2b2b2d; --text: rgba(255,255,255,.90); --secondary: rgba(255,255,255,.48); --border: rgba(255,255,255,.10); --hover: rgba(255,255,255,.06); }
+      }
     </style>
   </head>
   <body>
-    <h1>AgentHeadroom</h1>
-    <p class="intro">AgentHeadroom은 공식 CLI/API와 명시적으로 설치한 로컬 어댑터만 사용합니다. 수동 퍼센트 입력은 지원하지 않습니다.</p>
-    <div class="toolbar"><button id="open-adapters">자동 어댑터 폴더 열기</button></div>
-    <p class="message" id="message" role="status"></p>
-    <main id="providers"></main>
-    <p class="notice">로그인 쿠키·세션 토큰·대화 기록을 몰래 읽지 않습니다. 직접 연결한 API 키만 운영체제 보안 저장소로 암호화하며, 안전한 저장소가 없으면 연결을 거부합니다. 공식 구조화 조회가 없는 서비스는 숫자를 추정하지 않습니다.</p>
+    <div class="page">
+      <header class="top">
+        <div class="top-copy"><h1>연결</h1><p class="intro">공식 CLI, API 또는 설치한 로컬 어댑터에서 사용량을 가져옵니다.</p></div>
+        <div class="toolbar"><button class="secondary" id="open-adapters">어댑터 폴더</button></div>
+      </header>
+      <p class="message" id="message" role="status"></p>
+      <main id="providers"></main>
+      <p class="notice">기존 로그인 정보와 브라우저 쿠키는 읽지 않습니다. 직접 연결한 API 키만 운영체제 보안 저장소로 암호화합니다.</p>
+    </div>
     <script src="./settings.js"></script>
   </body>
 </html>

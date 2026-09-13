@@ -5,53 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AgentHeadroom</title>
     <style>
-      :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      :root {
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --surface: rgba(248, 248, 248, .94);
+        --surface-raised: rgba(255, 255, 255, .56);
+        --text: rgba(0, 0, 0, .88);
+        --secondary: rgba(0, 0, 0, .48);
+        --tertiary: rgba(0, 0, 0, .34);
+        --separator: rgba(0, 0, 0, .10);
+        --track: rgba(0, 0, 0, .09);
+        --fill: #6e7378;
+        --warning: #c77b18;
+        --critical: #c8443a;
+      }
       * { box-sizing: border-box; }
-      body { margin: 0; overflow: hidden; color: CanvasText; background: color-mix(in srgb, Canvas 94%, transparent); }
-      .shell { display: flex; flex-direction: column; padding: 20px 22px 14px; border: 1px solid color-mix(in srgb, CanvasText 13%, transparent); border-radius: 24px; box-shadow: 0 22px 64px rgba(0,0,0,.22); }
-      header { display: flex; align-items: center; gap: 13px; padding-bottom: 15px; }
-      .roomie { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 14px; color: white; background: #5965ec; font-size: 23px; }
-      .title { flex: 1; min-width: 0; }
-      h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.02em; }
-      .subtitle { margin-top: 3px; color: color-mix(in srgb, CanvasText 55%, transparent); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .headline { font-size: 36px; line-height: 1; font-weight: 650; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
-      #providers { max-height: 410px; overflow: auto; display: grid; align-content: start; gap: 16px; padding: 2px 3px 12px 0; }
-      .provider { padding-top: 1px; }
-      .provider-head, .limit-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-      .provider-name { font-size: 15px; font-weight: 650; }
-      .mode { color: color-mix(in srgb, CanvasText 48%, transparent); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
-      .account { margin-top: 10px; }
-      .limit-head { color: color-mix(in srgb, CanvasText 64%, transparent); font-size: 12px; }
-      .limit-head strong { color: CanvasText; font-size: 12px; font-variant-numeric: tabular-nums; }
-      .track { height: 7px; margin-top: 7px; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, CanvasText 10%, transparent); }
-      .fill { height: 100%; border-radius: inherit; background: #5c68ef; }
-      .fill.warn { background: #e99b3a; }
-      .fill.critical { background: #e5484d; }
-      .reset { margin-top: 5px; color: color-mix(in srgb, CanvasText 39%, transparent); font-size: 10px; }
-      .empty { padding: 28px 10px; text-align: center; color: color-mix(in srgb, CanvasText 50%, transparent); font-size: 13px; line-height: 1.55; }
-      .upcoming { margin-top: 3px; padding: 11px 12px; border-radius: 12px; background: color-mix(in srgb, #5965ec 9%, transparent); font-size: 11px; line-height: 1.6; }
-      .upcoming strong { display: block; margin-bottom: 2px; font-size: 11px; }
-      footer { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, CanvasText 11%, transparent); }
-      .updated { flex: 1; color: color-mix(in srgb, CanvasText 43%, transparent); font-size: 11px; }
-      button { display: grid; place-items: center; min-width: 32px; height: 30px; padding: 0 9px; border: 0; border-radius: 9px; color: color-mix(in srgb, CanvasText 68%, transparent); background: transparent; cursor: pointer; font: inherit; }
-      button:hover { color: CanvasText; background: color-mix(in srgb, CanvasText 8%, transparent); }
-      .text-button { font-size: 12px; }
-      @media (prefers-color-scheme: dark) { body { background: rgba(28,29,34,.96); } }
+      body { margin: 0; overflow: hidden; color: var(--text); background: transparent; -webkit-font-smoothing: antialiased; }
+      .shell { overflow: hidden; border: 1px solid var(--separator); border-radius: 16px; background: var(--surface); box-shadow: 0 18px 50px rgba(0, 0, 0, .18), 0 2px 8px rgba(0, 0, 0, .08); }
+      header { display: flex; align-items: center; min-height: 48px; padding: 8px 10px 8px 16px; border-bottom: 1px solid var(--separator); }
+      h1 { flex: 1; margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+      .header-actions { display: flex; gap: 2px; }
+      .summary { display: flex; align-items: center; min-height: 82px; padding: 14px 18px 15px; }
+      .summary-copy { flex: 1; min-width: 0; }
+      .summary-label { color: var(--secondary); font-size: 11px; font-weight: 500; }
+      .subtitle { margin-top: 5px; overflow: hidden; color: var(--text); font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+      .headline { margin-left: 18px; font-size: 30px; line-height: 1; font-weight: 600; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+      #providers { max-height: 390px; overflow: auto; padding: 0 18px; border-top: 1px solid var(--separator); }
+      .provider { padding: 14px 0 15px; }
+      .provider + .provider { border-top: 1px solid var(--separator); }
+      .provider-head, .limit-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+      .provider-name { font-size: 12px; font-weight: 600; }
+      .account { margin-top: 11px; }
+      .limit-title { min-width: 0; color: var(--secondary); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .account-label::before { content: "  ·  "; color: var(--tertiary); }
+      .limit-value { flex: none; color: var(--text); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+      .track { height: 4px; margin-top: 7px; overflow: hidden; border-radius: 2px; background: var(--track); }
+      .fill { height: 100%; border-radius: inherit; background: var(--fill); }
+      .fill.warn { background: var(--warning); }
+      .fill.critical { background: var(--critical); }
+      .reset { margin-top: 6px; color: var(--tertiary); font-size: 10px; font-variant-numeric: tabular-nums; }
+      .empty { padding: 32px 14px; text-align: center; color: var(--secondary); font-size: 12px; line-height: 1.55; }
+      .upcoming { padding: 13px 18px 14px; border-top: 1px solid var(--separator); }
+      .section-title { margin-bottom: 8px; color: var(--secondary); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+      .reset-row { display: flex; gap: 12px; justify-content: space-between; font-size: 11px; line-height: 1.8; }
+      .reset-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .reset-row time { flex: none; color: var(--secondary); font-variant-numeric: tabular-nums; }
+      footer { display: flex; align-items: center; min-height: 42px; padding: 6px 10px 6px 18px; border-top: 1px solid var(--separator); background: var(--surface-raised); }
+      .updated { flex: 1; color: var(--tertiary); font-size: 10px; }
+      button { display: grid; place-items: center; min-width: 30px; height: 28px; padding: 0 8px; border: 0; border-radius: 6px; color: var(--secondary); background: transparent; cursor: pointer; font: inherit; }
+      button:hover { color: var(--text); background: var(--track); }
+      button:disabled { opacity: .35; }
+      button svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .text-button { margin-left: 2px; font-size: 11px; }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --surface: rgba(36, 36, 38, .96);
+          --surface-raised: rgba(255, 255, 255, .035);
+          --text: rgba(255, 255, 255, .90);
+          --secondary: rgba(255, 255, 255, .50);
+          --tertiary: rgba(255, 255, 255, .32);
+          --separator: rgba(255, 255, 255, .10);
+          --track: rgba(255, 255, 255, .11);
+          --fill: #a3a6a9;
+          --warning: #d99a42;
+          --critical: #e06961;
+        }
+      }
     </style>
   </head>
   <body>
     <section class="shell">
       <header>
-        <div class="roomie" id="roomie">•ᴗ•</div>
-        <div class="title"><h1>AgentHeadroom</h1><div class="subtitle" id="subtitle">사용량 확인 중…</div></div>
-        <div class="headline" id="headline">--%</div>
+        <h1>AgentHeadroom</h1>
+        <div class="header-actions">
+          <button id="refresh" aria-label="새로고침" title="새로고침"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 5.5A5.7 5.7 0 1 0 13 11"/><path d="M13.2 2.5v3h-3"/></svg></button>
+          <button id="settings" aria-label="설정" title="에이전트 관리"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.3M8 12.9v1.3M14.2 8h-1.3M3.1 8H1.8M12.4 3.6l-.9.9M4.5 11.5l-.9.9M12.4 12.4l-.9-.9M4.5 4.5l-.9-.9"/></svg></button>
+        </div>
       </header>
+      <section class="summary">
+        <div class="summary-copy"><div class="summary-label">최저 잔여량</div><div class="subtitle" id="subtitle">사용량 확인 중…</div></div>
+        <div class="headline" id="headline">—</div>
+      </section>
       <main id="providers"></main>
       <section class="upcoming" id="upcoming" hidden></section>
       <footer>
         <span class="updated" id="updated">업데이트 중…</span>
-        <button id="refresh" aria-label="새로고침" title="새로고침">↻</button>
-        <button id="settings" aria-label="설정" title="에이전트 관리">⚙</button>
         <button class="text-button" id="quit">종료</button>
       </footer>
     </section>

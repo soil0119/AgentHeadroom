@@ -11,6 +11,8 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 
 [Website](https://soil0119.github.io/AgentHeadroom/) · [Download](https://github.com/soil0119/AgentHeadroom/releases/latest) · [Adapter protocol](docs/adapter-spec.md)
 
+Contributions are welcome through reviewed pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md); `main` requires CI and code-owner approval.
+
 ## Why it is different
 
 - macOS, Windows, Linux에서 동일한 공급자 모델과 어댑터 규격 사용
@@ -90,9 +92,9 @@ No analytics are included.
 
 팀 관리자가 설정에서 직접 Admin API 키를 연결하면 공식 `/teams/spend` 응답의 현재 결제 주기 지출액과 적용 중인 팀원별 한도를 사용해 남은 비율을 계산합니다. 모든 팀원을 별도 계정으로 표시하며 15분마다 갱신합니다. 키는 macOS Keychain, Windows DPAPI 또는 Linux의 libsecret/KWallet 계열 저장소를 통해 암호화합니다. Linux가 `basic_text` 저장소만 제공하면 연결하지 않습니다. 연결 해제 시 AgentHeadroom이 만든 암호화 키 파일만 삭제합니다.
 
-## Roomie
+## Visual design
 
-The tray mascot is **Roomie**, an original tiny robot whose color and expression reflect the tightest remaining quota. It does not reuse RunCat artwork, animation frames, name, or branding.
+AgentHeadroom uses a neutral system-style gauge and native platform typography. The interface intentionally avoids mascots, provider-brand mimicry, decorative gradients, and animated status characters.
 
 ## License
 
