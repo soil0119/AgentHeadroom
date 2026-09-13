@@ -13,5 +13,7 @@ contextBridge.exposeInMainWorld("agentHeadroom", {
   },
   getProviders: () => ipcRenderer.invoke("providers:get"),
   openAdapters: () => ipcRenderer.invoke("providers:open-adapters"),
+  installClaude: () => ipcRenderer.invoke("connectors:claude-install"),
+  removeClaude: () => ipcRenderer.invoke("connectors:claude-remove"),
   openExternal: (url) => ipcRenderer.invoke("providers:open-external", { url }),
 });

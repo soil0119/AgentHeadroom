@@ -1,4 +1,5 @@
 const root = document.querySelector("#providers");
+const message = document.querySelector("#message");
 
 function escapeHtml(value) {
   return String(value)
@@ -18,7 +19,9 @@ async function render() {
       const minimum = Math.min(...account.limits.map((limit) => limit.remainingPercent));
       return `${escapeHtml(account.label)} ${Number.isFinite(minimum) ? `${minimum}%` : "—"}`;
     }).join(" · ");
-    const status = row.mode === "automatic"
+    const status = row.id === "claude" && row.connectorInstalled && !connected
+      ? "자동 연결됨 · Claude Code에서 첫 응답 후 표시됩니다"
+      : row.mode === "automatic"
       ? (row.error ? `자동 조회 오류 · ${escapeHtml(row.error)}` : connected ? `공식 CLI 자동 동기화 · ${accountSummary}` : "공식 CLI 연결 대기")
       : row.mode === "adapter"
         ? `로컬 자동 어댑터 · ${accountSummary}`
@@ -28,6 +31,7 @@ async function render() {
         <div><div class="name">${escapeHtml(row.name)}</div><div class="meta">${status}</div></div>
         <div class="value">${percent}</div>
         <div class="actions">
+          ${row.id === "claude" ? `<button class="${row.connectorInstalled ? "danger disconnect-claude" : "connect-claude"}">${row.connectorInstalled ? "연결 해제" : "Claude 자동 연결"}</button>` : ""}
           ${row.usageUrl ? `<button class="secondary open">공식 사용량 화면</button>` : ""}
         </div>
       </section>`;
@@ -41,8 +45,19 @@ root.addEventListener("click", async (event) => {
   const row = rows.find((item) => item.id === card.dataset.id);
   if (!row) return;
 
-  if (event.target.classList.contains("open")) {
-    await window.agentHeadroom.openExternal(row.usageUrl);
+  message.textContent = "";
+  try {
+    if (event.target.classList.contains("open")) {
+      await window.agentHeadroom.openExternal(row.usageUrl);
+    } else if (event.target.classList.contains("connect-claude")) {
+      await window.agentHeadroom.installClaude();
+      await render();
+    } else if (event.target.classList.contains("disconnect-claude")) {
+      await window.agentHeadroom.removeClaude();
+      await render();
+    }
+  } catch (error) {
+    message.textContent = error.message;
   }
 });
 

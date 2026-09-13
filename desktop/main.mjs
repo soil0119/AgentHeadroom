@@ -1,6 +1,8 @@
-import { mkdir } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import {
   app,
   BrowserWindow,
@@ -14,6 +16,15 @@ import {
 import { fetchRateLimits } from "./core.mjs";
 import { loadAdapterManifests, runAdapter } from "./adapter-runtime.mjs";
 import {
+  agentHeadroomUserDataPath,
+  captureClaudeStatusLine,
+  CLAUDE_BRIDGE_ARG,
+  installClaudeConnector,
+  isClaudeConnectorInstalled,
+  readClaudeSnapshot,
+  removeClaudeConnector,
+} from "./claude-connector.mjs";
+import {
   adapterSnapshotRows,
   lowestHeadroom,
   overallRemaining,
@@ -23,6 +34,7 @@ import {
 
 const REFRESH_INTERVAL_MS = 60_000;
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
+const execFileAsync = promisify(execFile);
 let isKorean = false;
 let text = {
   loading: "Checking agent usage…",
@@ -45,6 +57,8 @@ let refreshing = false;
 let codexSummary;
 let codexError;
 let lastUpdated;
+let claudeSnapshot;
+let claudeConnectorInstalled = false;
 let adapterSnapshots = [];
 let adapterErrors = [];
 
@@ -53,11 +67,52 @@ function adaptersPath() {
     || path.join(app.getPath("userData"), "adapters");
 }
 
+function connectorsPath() {
+  return path.join(agentHeadroomUserDataPath(), "connectors");
+}
+
+function claudeSnapshotPath() {
+  return path.join(connectorsPath(), "claude-statusline-snapshot.json");
+}
+
+function claudeMarkerPath() {
+  return path.join(connectorsPath(), "claude-statusline.json");
+}
+
+function claudeSettingsPath() {
+  return path.join(app.getPath("home"), ".claude", "settings.json");
+}
+
+function claudeBridgeScriptPath() {
+  return path.join(app.getPath("home"), ".claude", "agent-headroom-statusline.cjs");
+}
+
+async function nodeExecutable() {
+  const candidate = process.env.AGENT_HEADROOM_NODE_PATH || "node";
+  try {
+    await execFileAsync(candidate, ["--version"], { timeout: 3_000, windowsHide: true });
+    return candidate;
+  } catch {
+    throw new Error("Claude 자동 연결에는 Node.js가 필요합니다. Node.js를 설치한 뒤 다시 시도하세요.");
+  }
+}
+
 function rows() {
-  return [
-    ...providerRows({ codexSummary, codexError }),
-    ...adapterSnapshotRows(adapterSnapshots),
-  ];
+  const catalog = providerRows({ codexSummary, codexError });
+  const claudeRow = claudeSnapshot
+    ? adapterSnapshotRows([claudeSnapshot])[0]
+    : null;
+  const builtIns = catalog.map((provider) => {
+    if (provider.id !== "claude") return provider;
+    if (!claudeRow) return { ...provider, connectorInstalled: claudeConnectorInstalled };
+    return {
+      ...claudeRow,
+      id: "claude",
+      mode: "automatic",
+      connectorInstalled: claudeConnectorInstalled,
+    };
+  });
+  return [...builtIns, ...adapterSnapshotRows(adapterSnapshots)];
 }
 
 function iconSvg(value, failed = false, showNumber = true) {
@@ -201,6 +256,7 @@ async function refresh() {
     codexError = error.message;
   } finally {
     try {
+      claudeSnapshot = await readClaudeSnapshot(claudeSnapshotPath());
       const manifests = await loadAdapterManifests(adaptersPath());
       const results = await Promise.allSettled(manifests.map((manifest) => runAdapter(manifest)));
       adapterSnapshots = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
@@ -319,6 +375,36 @@ function registerIpc() {
     positionDashboard();
   });
   ipcMain.handle("providers:get", () => rows());
+  ipcMain.handle("connectors:claude-install", async () => {
+    if (!app.isPackaged) throw new Error("Claude 자동 연결은 패키징된 앱에서 설정하세요.");
+    const bridgeScriptContent = await readFile(
+      path.join(moduleDirectory, "claude-statusline-bridge.cjs"),
+      "utf8",
+    );
+    await installClaudeConnector({
+      settingsPath: claudeSettingsPath(),
+      markerPath: claudeMarkerPath(),
+      nodeExecutable: await nodeExecutable(),
+      bridgeScriptPath: claudeBridgeScriptPath(),
+      bridgeScriptContent,
+      snapshotPath: claudeSnapshotPath(),
+    });
+    claudeConnectorInstalled = true;
+    updateTray();
+    return rows();
+  });
+  ipcMain.handle("connectors:claude-remove", async () => {
+    await removeClaudeConnector({
+      settingsPath: claudeSettingsPath(),
+      markerPath: claudeMarkerPath(),
+      snapshotPath: claudeSnapshotPath(),
+      bridgeScriptPath: claudeBridgeScriptPath(),
+    });
+    claudeConnectorInstalled = false;
+    claudeSnapshot = null;
+    updateTray();
+    return rows();
+  });
   ipcMain.handle("providers:open-adapters", async () => {
     await mkdir(adaptersPath(), { recursive: true });
     await shell.openPath(adaptersPath());
@@ -330,7 +416,27 @@ function registerIpc() {
   });
 }
 
-if (!app.requestSingleInstanceLock()) {
+const claudeBridgeMode = process.argv.includes(CLAUDE_BRIDGE_ARG);
+
+async function runClaudeBridge() {
+  let size = 0;
+  const chunks = [];
+  for await (const chunk of process.stdin) {
+    size += chunk.length;
+    if (size > 1_048_576) throw new Error("Claude status line input is too large");
+    chunks.push(chunk);
+  }
+  return captureClaudeStatusLine({
+    input: Buffer.concat(chunks).toString("utf8"),
+    snapshotPath: claudeSnapshotPath(),
+  });
+}
+
+if (claudeBridgeMode) {
+  runClaudeBridge()
+    .then((line) => process.stdout.write(`${line}\n`, () => process.exit(0)))
+    .catch(() => process.stdout.write("AgentHeadroom · quota unavailable\n", () => process.exit(0)));
+} else if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on("second-instance", toggleDashboard);
@@ -353,6 +459,7 @@ if (!app.requestSingleInstanceLock()) {
     if (process.platform === "win32") {
       app.setAppUserModelId("dev.agentheadroom.app");
     }
+    claudeConnectorInstalled = await isClaudeConnectorInstalled(claudeMarkerPath());
     registerIpc();
     tray = new Tray(makeIcon(null));
     tray.setToolTip(text.loading);

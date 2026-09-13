@@ -28,7 +28,7 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 | Provider | Mode | Notes |
 |---|---|---|
 | OpenAI Codex | Automatic | 설치되고 로그인된 Codex CLI의 app-server 사용 |
-| Claude Code | Automatic connector | Claude Code가 제공하는 구조화 데이터 범위 내에서 연동 |
+| Claude Code | Automatic | 설정에서 연결하면 공식 status-line 입력의 5시간·주간 한도를 자동 수집 |
 | Gemini CLI | Automatic connector | 공식 `/stats model`의 안정적인 기계 판독 경로가 필요 |
 | GitHub Copilot | Automatic connector | 개인·조직 Billing API 연결 대상 |
 | Cursor | Automatic connector | 팀 Admin API 연결 대상; 개인 잔여 한도 API는 미공개 |
@@ -81,6 +81,10 @@ Build installers with `npm run dist:mac`, `npm run dist:win`, or `npm run dist:l
 AgentHeadroom itself never reads authentication tokens, browser cookies, chat transcripts, or OS credential stores. Codex data comes through the locally installed Codex CLI. Local adapters are executable programs, so install only adapters you trust and review their own privacy disclosures.
 
 No analytics are included.
+
+### Claude Code automatic connection
+
+설정에서 **Claude 자동 연결**을 누르면 AgentHeadroom이 `~/.claude/settings.json`의 빈 `statusLine` 슬롯에 가벼운 Node.js 브리지를 등록합니다. Claude Code가 첫 응답 후 공식적으로 전달하는 `rate_limits`만 로컬 스냅샷에 보관하며, transcript 경로·프롬프트·인증 정보는 저장하지 않습니다. 기존 status line이 있으면 덮어쓰지 않고 연결을 중단합니다. 연결 해제 시 AgentHeadroom이 추가한 설정·브리지·스냅샷만 제거합니다. Claude 자동 연결에는 `node` 실행 파일이 PATH에 있어야 합니다.
 
 ## Roomie
 

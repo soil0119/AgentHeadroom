@@ -5,6 +5,7 @@
 - Rename the product to AgentHeadroom.
 - Ship the same Electron provider engine on macOS, Windows, and Linux.
 - Add an automatic-connector catalog for common AI agents; unsupported providers remain unset rather than accepting manual or estimated values.
+- Add an opt-in Claude Code status-line bridge that stores only documented rate-limit windows and preserves existing status-line setups.
 - Add public Adapter Protocol v1 with multi-provider, multi-account, and multi-window snapshots.
 - Show the tightest remaining quota as the tray headline and reset events in chronological order.
 - Add a native-positioned tray popover with provider/account progress bars and quick controls.

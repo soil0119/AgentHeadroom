@@ -24,12 +24,14 @@
       button.danger { background: transparent; color: #e5484d; }
       .toolbar { display: flex; margin: 0 0 18px; }
       .notice { margin-top: 18px; color: color-mix(in srgb, CanvasText 55%, transparent); font-size: 12px; line-height: 1.5; }
+      .message { min-height: 18px; margin: 0 0 10px; color: #d84a52; font-size: 12px; }
     </style>
   </head>
   <body>
     <h1>AgentHeadroom</h1>
     <p class="intro">AgentHeadroom은 공식 CLI/API와 명시적으로 설치한 로컬 어댑터만 사용합니다. 수동 퍼센트 입력은 지원하지 않습니다.</p>
     <div class="toolbar"><button id="open-adapters">자동 어댑터 폴더 열기</button></div>
+    <p class="message" id="message" role="status"></p>
     <main id="providers"></main>
     <p class="notice">로그인 쿠키·세션 토큰·대화 기록을 몰래 읽지 않습니다. 공식 구조화 조회가 없는 서비스는 숫자를 추정하지 않고 연동 대기로 표시합니다.</p>
     <script src="./settings.js"></script>
