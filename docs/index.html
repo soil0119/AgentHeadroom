@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Codex 잔여 사용량을 macOS 메뉴바에서 바로 확인하세요." />
+    <title>CodexHeadroom — Codex usage in your menu bar</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; color: #f7f7f7; background: radial-gradient(circle at 50% -10%, #29324d 0, #0d1018 38%, #050609 72%); }
+      main { width: min(980px, calc(100% - 40px)); margin: 0 auto; padding: 88px 0 64px; text-align: center; }
+      .badge { display: inline-flex; gap: 8px; align-items: center; padding: 7px 12px; border: 1px solid #343a4a; border-radius: 999px; color: #b9c3d8; background: #151924aa; font-size: 13px; }
+      h1 { margin: 26px 0 14px; font-size: clamp(48px, 9vw, 88px); letter-spacing: -0.06em; }
+      .lead { max-width: 700px; margin: 0 auto; color: #aeb6c5; font-size: clamp(18px, 2.4vw, 24px); line-height: 1.55; }
+      .actions { display: flex; justify-content: center; gap: 12px; margin: 32px 0 62px; flex-wrap: wrap; }
+      a { color: inherit; text-decoration: none; }
+      .button { padding: 12px 18px; border-radius: 12px; border: 1px solid #3c4354; font-weight: 650; background: #161a24; }
+      .button.primary { color: #0b1017; border-color: #ffffff; background: #ffffff; }
+      .mac { max-width: 680px; margin: 0 auto; overflow: hidden; border: 1px solid #353b4b; border-radius: 22px; background: #121621cc; box-shadow: 0 30px 100px #00000080; text-align: left; }
+      .menubar { display: flex; justify-content: flex-end; gap: 17px; padding: 11px 18px; border-bottom: 1px solid #2a3040; background: #07090e; font-size: 14px; }
+      .meter { padding: 24px; }
+      .meter-head { display: flex; align-items: baseline; justify-content: space-between; }
+      .percent { font-size: 42px; font-weight: 750; }
+      .row { margin-top: 22px; }
+      .row-label { display: flex; justify-content: space-between; color: #c5ccda; font-size: 14px; }
+      .track { height: 8px; margin-top: 8px; border-radius: 999px; background: #2a3040; overflow: hidden; }
+      .fill { width: 82%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7c8cff, #b8c2ff); }
+      .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 64px; text-align: left; }
+      .feature { padding: 22px; border: 1px solid #262c3a; border-radius: 16px; background: #10131bcc; }
+      .feature h2 { margin: 0 0 8px; font-size: 17px; }
+      .feature p { margin: 0; color: #929bad; line-height: 1.55; font-size: 14px; }
+      footer { margin-top: 56px; color: #70798b; font-size: 13px; }
+      @media (max-width: 680px) { main { padding-top: 56px; } .features { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="badge">● Native macOS menu bar app</div>
+      <h1>CodexHeadroom</h1>
+      <p class="lead">작업에 몰입한 채로, Codex 잔여 사용량을 한눈에.<br />5시간·주간 한도와 리셋 시각까지 메뉴바에서 확인하세요.</p>
+      <div class="actions">
+        <a class="button primary" href="https://github.com/soil0119/CodexHeadroom/releases/latest">Download for macOS</a>
+        <a class="button" href="https://github.com/soil0119/CodexHeadroom">View on GitHub</a>
+      </div>
+
+      <section class="mac" aria-label="CodexHeadroom preview">
+        <div class="menubar"><span>◴ 82%</span><span>9월 13일 (일) 오후 5:34</span></div>
+        <div class="meter">
+          <div class="meter-head"><div><strong>CodexHeadroom</strong><br /><small>남은 사용량</small></div><div class="percent">82%</div></div>
+          <div class="row"><div class="row-label"><span>주간 한도</span><strong>82% 남음</strong></div><div class="track"><div class="fill"></div></div></div>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="feature"><h2>늘 보이는 잔여율</h2><p>메뉴바의 퍼센트로 다음 큰 작업을 시작해도 될지 바로 판단할 수 있습니다.</p></div>
+        <div class="feature"><h2>로컬 우선</h2><p>별도 API 키를 요구하거나 인증 토큰을 저장하지 않고 설치된 Codex를 사용합니다.</p></div>
+        <div class="feature"><h2>가볍고 네이티브</h2><p>SwiftUI로 만든 작은 앱입니다. Dock을 차지하지 않고 메뉴바에만 머뭅니다.</p></div>
+      </section>
+      <footer>Open source under the MIT License · CodexHeadroom is an independent side project.</footer>
+    </main>
+  </body>
+</html>
