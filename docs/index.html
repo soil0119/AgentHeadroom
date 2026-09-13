@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Codex 잔여 사용량을 macOS 메뉴바에서 바로 확인하세요." />
-    <title>CodexHeadroom — Codex usage in your menu bar</title>
+    <meta name="description" content="모든 AI 에이전트의 남은 사용량을 하나의 메뉴바와 시스템 트레이에서 비교하세요." />
+    <title>AgentHeadroom — Every agent, one headroom number</title>
     <style>
       :root { color-scheme: dark; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
       * { box-sizing: border-box; }
@@ -36,28 +36,30 @@
   </head>
   <body>
     <main>
-      <div class="badge">● Native macOS menu bar app</div>
-      <h1>CodexHeadroom</h1>
-      <p class="lead">작업에 몰입한 채로, Codex 잔여 사용량을 한눈에.<br />5시간·주간 한도와 리셋 시각까지 메뉴바에서 확인하세요.</p>
+      <div class="badge">● macOS · Windows · Linux</div>
+      <h1>AgentHeadroom</h1>
+      <p class="lead">Every agent. Every account. One headroom number.<br />가장 먼저 고갈될 AI 한도와 다음 리셋을 메뉴바와 시스템 트레이에서 확인하세요.</p>
       <div class="actions">
-        <a class="button primary" href="https://github.com/soil0119/CodexHeadroom/releases/latest">Download for macOS</a>
-        <a class="button" href="https://github.com/soil0119/CodexHeadroom">View on GitHub</a>
+        <a class="button primary" href="https://github.com/soil0119/AgentHeadroom/releases/latest">Download for your OS</a>
+        <a class="button" href="https://github.com/soil0119/AgentHeadroom">View on GitHub</a>
       </div>
 
-      <section class="mac" aria-label="CodexHeadroom preview">
-        <div class="menubar"><span>◴ 82%</span><span>9월 13일 (일) 오후 5:34</span></div>
+      <section class="mac" aria-label="AgentHeadroom preview">
+        <div class="menubar"><span>🤖 21%</span><span>9월 13일 (일) 오후 5:34</span></div>
         <div class="meter">
-          <div class="meter-head"><div><strong>CodexHeadroom</strong><br /><small>남은 사용량</small></div><div class="percent">82%</div></div>
-          <div class="row"><div class="row-label"><span>주간 한도</span><strong>82% 남음</strong></div><div class="track"><div class="fill"></div></div></div>
+          <div class="meter-head"><div><strong>AgentHeadroom</strong><br /><small>가장 빠른 고갈 · Claude Team</small></div><div class="percent">21%</div></div>
+          <div class="row"><div class="row-label"><span>OpenAI Codex · Personal</span><strong>77% 남음</strong></div><div class="track"><div class="fill" style="width:77%"></div></div></div>
+          <div class="row"><div class="row-label"><span>Claude Code · Team</span><strong>21% 남음</strong></div><div class="track"><div class="fill" style="width:21%;background:linear-gradient(90deg,#e56b63,#ff9c85)"></div></div></div>
+          <div class="row"><div class="row-label"><span>Grok · Personal</span><strong>64% 남음</strong></div><div class="track"><div class="fill" style="width:64%"></div></div></div>
         </div>
       </section>
 
       <section class="features">
-        <div class="feature"><h2>늘 보이는 잔여율</h2><p>메뉴바의 퍼센트로 다음 큰 작업을 시작해도 될지 바로 판단할 수 있습니다.</p></div>
-        <div class="feature"><h2>로컬 우선</h2><p>별도 API 키를 요구하거나 인증 토큰을 저장하지 않고 설치된 Codex를 사용합니다.</p></div>
-        <div class="feature"><h2>가볍고 네이티브</h2><p>SwiftUI로 만든 작은 앱입니다. Dock을 차지하지 않고 메뉴바에만 머뭅니다.</p></div>
+        <div class="feature"><h2>한 숫자로 우선순위</h2><p>모든 에이전트·계정·기간 중 가장 낮은 잔여율과 가까운 리셋부터 보여줍니다.</p></div>
+        <div class="feature"><h2>자격 증명은 건드리지 않음</h2><p>로그인 토큰과 브라우저 쿠키를 읽지 않습니다. 공식 CLI, 로컬 어댑터, 수동 기록만 사용합니다.</p></div>
+        <div class="feature"><h2>열린 어댑터 규격</h2><p>Codex, Claude, Grok뿐 아니라 사내 에이전트와 여러 개인·팀 계정도 JSON 어댑터 하나로 연결합니다.</p></div>
       </section>
-      <footer>Open source under the MIT License · CodexHeadroom is an independent side project.</footer>
+      <footer>Open source under the MIT License · Roomie is an original AgentHeadroom mascot.</footer>
     </main>
   </body>
 </html>

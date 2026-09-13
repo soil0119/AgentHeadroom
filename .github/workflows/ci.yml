@@ -7,10 +7,37 @@ on:
 
 jobs:
   test:
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - name: Test
-        run: swift test
-      - name: Build release
-        run: swift build -c release --product CodexHeadroom
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run check:syntax
+
+  package:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            command: dist:mac
+          - os: windows-latest
+            command: dist:win
+          - os: ubuntu-latest
+            command: dist:linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run ${{ matrix.command }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
