@@ -8,37 +8,37 @@ export const BUILTIN_PROVIDERS = [
   {
     id: "claude",
     name: "Claude Code",
-    mode: "manual",
+    mode: "connector",
     usageUrl: "https://claude.ai/settings/usage",
   },
   {
     id: "grok",
     name: "Grok",
-    mode: "manual",
+    mode: "connector",
     usageUrl: "https://grok.com/settings/usage",
   },
   {
     id: "gemini",
     name: "Gemini CLI",
-    mode: "manual",
+    mode: "connector",
     usageUrl: "https://one.google.com/explore-plan/google-ai-pro",
   },
   {
     id: "copilot",
     name: "GitHub Copilot",
-    mode: "manual",
+    mode: "connector",
     usageUrl: "https://github.com/settings/billing/summary",
   },
   {
     id: "cursor",
     name: "Cursor",
-    mode: "manual",
+    mode: "connector",
     usageUrl: "https://cursor.com/dashboard",
   },
   {
     id: "windsurf",
     name: "Windsurf",
-    mode: "manual",
+    mode: "connector",
     usageUrl: "https://windsurf.com/subscription/manage-plan",
   },
 ];
@@ -49,39 +49,8 @@ export function clampPercent(value) {
   return Math.min(100, Math.max(0, Math.round(number)));
 }
 
-export function normalizeProviderState(input = {}) {
-  const manual = input.manual && typeof input.manual === "object"
-    ? Object.fromEntries(Object.entries(input.manual).flatMap(([id, item]) => {
-      const remainingPercent = clampPercent(item?.remainingPercent);
-      if (remainingPercent === null) return [];
-      return [[id, {
-        remainingPercent,
-        updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : null,
-        resetsAt: Number.isFinite(Number(item.resetsAt)) ? Number(item.resetsAt) : null,
-      }]];
-    }))
-    : {};
-
-  const custom = Array.isArray(input.custom)
-    ? input.custom.flatMap((item) => {
-      const name = typeof item?.name === "string" ? item.name.trim().slice(0, 60) : "";
-      if (!name) return [];
-      const id = typeof item.id === "string" && item.id.trim()
-        ? item.id.trim()
-        : `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-      const usageUrl = typeof item.usageUrl === "string" && /^https:\/\//i.test(item.usageUrl)
-        ? item.usageUrl
-        : null;
-      return [{ id, name, mode: "manual", usageUrl }];
-    })
-    : [];
-
-  return { manual, custom };
-}
-
-export function providerRows({ state, codexSummary = null, codexError = null } = {}) {
-  const normalized = normalizeProviderState(state);
-  return [...BUILTIN_PROVIDERS, ...normalized.custom].map((provider) => {
+export function providerRows({ codexSummary = null, codexError = null } = {}) {
+  return BUILTIN_PROVIDERS.map((provider) => {
     if (provider.id === "codex") {
       const limits = (codexSummary?.limits ?? []).flatMap((limit) =>
         limit.windows.map((window, index) => ({
@@ -98,22 +67,12 @@ export function providerRows({ state, codexSummary = null, codexError = null } =
         accounts: [{ id: "default", label: "Default", limits }],
       };
     }
-    const manual = normalized.manual[provider.id];
     return {
       ...provider,
-      remainingPercent: manual?.remainingPercent ?? null,
-      updatedAt: manual?.updatedAt ?? null,
+      remainingPercent: null,
+      updatedAt: null,
       error: null,
-      accounts: Number.isFinite(manual?.remainingPercent) ? [{
-        id: "default",
-        label: "Default",
-        limits: [{
-          id: "manual",
-          label: "Manual",
-          remainingPercent: manual.remainingPercent,
-          resetsAt: manual.resetsAt ?? null,
-        }],
-      }] : [],
+      accounts: [],
     };
   });
 }

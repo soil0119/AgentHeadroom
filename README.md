@@ -7,6 +7,8 @@
 
 AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent quotas across providers, accounts, and reset windows.
 
+트레이 숫자를 클릭하면 공급자·계정·한도별 진행 막대, 가장 먼저 고갈될 한도, 시간순 리셋 일정을 한 팝오버에서 확인할 수 있습니다. 우클릭 메뉴는 빠른 관리 작업용으로 유지됩니다.
+
 [Website](https://soil0119.github.io/AgentHeadroom/) · [Download](https://github.com/soil0119/AgentHeadroom/releases/latest) · [Adapter protocol](docs/adapter-spec.md)
 
 ## Why it is different
@@ -14,8 +16,10 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 - macOS, Windows, Linux에서 동일한 공급자 모델과 어댑터 규격 사용
 - 로그인 토큰, OS 자격 증명 저장소, 브라우저 쿠키를 직접 읽지 않음
 - 공개 JSON 어댑터 규격으로 어떤 로컬 CLI나 사내 사용량 서비스도 연결
-- 공식 조회 수단이 있는 공급자는 자동 동기화하고, 없는 공급자는 로컬 어댑터 또는 수동 기록
+- 공식 조회 수단이 있는 공급자는 자동 동기화하고, 그 외에는 명시적으로 설치한 로컬 자동 어댑터 사용
+- 수동 퍼센트 입력이나 추정값 없이 검증 가능한 자동 데이터만 표시
 - 모든 공급자·계정·기간 중 **가장 먼저 고갈될 한도**를 트레이 숫자로 표시
+- 트레이를 좌클릭하면 모든 활성 에이전트의 통합 사용량 팝오버 표시
 - 리셋 예정 시간을 빠른 순서대로 표시
 - 개인·팀·조직 등 여러 계정을 하나의 트레이에서 비교
 
@@ -24,13 +28,12 @@ AgentHeadroom is a privacy-first, cross-platform tray app for comparing AI agent
 | Provider | Mode | Notes |
 |---|---|---|
 | OpenAI Codex | Automatic | 설치되고 로그인된 Codex CLI의 app-server 사용 |
-| Claude Code | Manual / adapter | 공식 사용량 화면 바로가기 포함 |
-| Grok | Manual / adapter | Settings → Usage 바로가기 포함 |
-| Gemini CLI | Manual / adapter | 사용량/플랜 화면 바로가기 포함 |
-| GitHub Copilot | Manual / adapter | Billing 화면 바로가기 포함 |
-| Cursor | Manual / adapter | Dashboard 바로가기 포함 |
-| Windsurf | Manual / adapter | Plan 관리 화면 바로가기 포함 |
-| Any other agent | Manual / adapter | 이름과 HTTPS 사용량 URL을 직접 추가 |
+| Claude Code | Automatic | 설정에서 연결하면 공식 status-line 입력의 5시간·주간 한도를 자동 수집 |
+| Gemini CLI | Automatic connector | 공식 `/stats model`의 안정적인 기계 판독 경로가 필요 |
+| GitHub Copilot | Automatic connector | 개인·조직 Billing API 연결 대상 |
+| Cursor | Automatic connector | 팀 Admin API 연결 대상; 개인 잔여 한도 API는 미공개 |
+| Grok / Windsurf | Automatic connector | 공식 조회 인터페이스가 공개되면 활성화 |
+| Any other agent | Local adapter | Adapter Protocol v1 자동 스냅샷만 허용 |
 
 공식 API나 CLI 계약이 문서화되지 않은 서비스는 자동 로그인을 흉내 내거나 비공개 엔드포인트를 호출하지 않습니다.
 
@@ -75,9 +78,13 @@ Build installers with `npm run dist:mac`, `npm run dist:win`, or `npm run dist:l
 
 ## Privacy and security
 
-AgentHeadroom itself never reads authentication tokens, browser cookies, chat transcripts, or OS credential stores. Codex data comes through the locally installed Codex CLI. Manual values stay in the app's local data directory. Local adapters are executable programs, so install only adapters you trust and review their own privacy disclosures.
+AgentHeadroom itself never reads authentication tokens, browser cookies, chat transcripts, or OS credential stores. Codex data comes through the locally installed Codex CLI. Local adapters are executable programs, so install only adapters you trust and review their own privacy disclosures.
 
 No analytics are included.
+
+### Claude Code automatic connection
+
+설정에서 **Claude 자동 연결**을 누르면 AgentHeadroom이 `~/.claude/settings.json`의 빈 `statusLine` 슬롯에 가벼운 Node.js 브리지를 등록합니다. Claude Code가 첫 응답 후 공식적으로 전달하는 `rate_limits`만 로컬 스냅샷에 보관하며, transcript 경로·프롬프트·인증 정보는 저장하지 않습니다. 기존 status line이 있으면 덮어쓰지 않고 연결을 중단합니다. 연결 해제 시 AgentHeadroom이 추가한 설정·브리지·스냅샷만 제거합니다. Claude 자동 연결에는 `node` 실행 파일이 PATH에 있어야 합니다.
 
 ## Roomie
 
