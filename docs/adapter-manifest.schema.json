@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soil0119.github.io/AgentHeadroom/adapter-manifest.schema.json",
+  "title": "AgentHeadroom Adapter Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "executable"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "executable": { "type": "string", "minLength": 1 },
+    "args": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "timeoutMs": { "type": "integer", "minimum": 1000, "maximum": 30000, "default": 10000 }
+  }
+}

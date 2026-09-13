@@ -1,0 +1,70 @@
+{
+  "name": "agent-headroom",
+  "version": "0.2.0",
+  "description": "Cross-platform tray indicator for AI agent usage headroom",
+  "license": "MIT",
+  "author": "soil0119",
+  "homepage": "https://soil0119.github.io/AgentHeadroom/",
+  "desktopName": "AgentHeadroom.desktop",
+  "type": "module",
+  "main": "desktop/main.mjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test desktop/test/*.test.mjs",
+    "check:syntax": "node --check desktop/main.mjs && node --check desktop/core.mjs && node --check desktop/adapter-runtime.mjs && node --check desktop/providers.mjs && node --check desktop/settings.js",
+    "check:usage": "node desktop/check.mjs",
+    "dist:mac": "electron-builder --mac zip --arm64 --x64 --publish never",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:linux": "electron-builder --linux AppImage --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.3.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "dev.agentheadroom.app",
+    "productName": "AgentHeadroom",
+    "asar": true,
+    "directories": {
+      "output": "dist-cross"
+    },
+    "files": [
+      "desktop/**/*",
+      "build/icon.png",
+      "package.json",
+      "LICENSE"
+    ],
+    "icon": "build/icon.png",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "AgentHeadroom-v${version}-Windows-x64.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true
+    },
+    "linux": {
+      "syncDesktopName": true,
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Utility",
+      "artifactName": "AgentHeadroom-v${version}-Linux-x86_64.${ext}"
+    },
+    "mac": {
+      "target": "zip",
+      "category": "public.app-category.utilities",
+      "artifactName": "AgentHeadroom-v${version}-macOS-${arch}.${ext}"
+    }
+  }
+}

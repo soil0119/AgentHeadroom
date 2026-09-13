@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — 2026-09-13
+
+- Rename the product to AgentHeadroom.
+- Ship the same Electron provider engine on macOS, Windows, and Linux.
+- Add manual tracking for common AI agents and arbitrary custom agents.
+- Add public Adapter Protocol v1 with multi-provider, multi-account, and multi-window snapshots.
+- Show the tightest remaining quota as the tray headline and reset events in chronological order.
+- Add the original Roomie status mascot.
+- Add `AGENT_HEADROOM_CODEX_PATH` while retaining previous Codex path overrides.
+
 ## 0.1.0 — 2026-09-13
 
 - Show the remaining Codex allowance as a percentage in the macOS menu bar.

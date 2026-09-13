@@ -2,4 +2,6 @@
 /.build/
 /dist/
 /.swiftpm/
+/node_modules/
+/dist-cross/
 Package.resolved

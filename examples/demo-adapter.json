@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-agent",
+  "executable": "./demo-adapter.mjs",
+  "args": [],
+  "timeoutMs": 10000
+}
