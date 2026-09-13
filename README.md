@@ -2,7 +2,12 @@
 
 > Codex 잔여 사용량을 macOS 메뉴바에서 바로 확인하세요.
 
+[![CI](https://github.com/soil0119/CodexHeadroom/actions/workflows/ci.yml/badge.svg)](https://github.com/soil0119/CodexHeadroom/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/soil0119/CodexHeadroom)](https://github.com/soil0119/CodexHeadroom/releases/latest)
+
 CodexHeadroom is a tiny, native macOS menu bar app that shows your remaining Codex usage as a percentage.
+
+[Website](https://soil0119.github.io/CodexHeadroom/) · [Download](https://github.com/soil0119/CodexHeadroom/releases/latest)
 
 There are already capable Codex usage widgets. CodexHeadroom deliberately focuses on one job: a Korean-first, one-number menu bar indicator with no token-file parsing, account switching, telemetry, or dashboard clutter.
 
