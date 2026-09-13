@@ -21,8 +21,10 @@ async function render() {
     }).join(" · ");
     const status = row.id === "claude" && row.connectorInstalled && !connected
       ? "자동 연결됨 · Claude Code에서 첫 응답 후 표시됩니다"
+      : row.id === "cursor" && !row.connectorInstalled
+        ? "팀 관리자만 공식 Admin API로 연결할 수 있습니다"
       : row.mode === "automatic"
-      ? (row.error ? `자동 조회 오류 · ${escapeHtml(row.error)}` : connected ? `공식 CLI 자동 동기화 · ${accountSummary}` : "공식 CLI 연결 대기")
+      ? (row.error ? `자동 조회 오류 · ${escapeHtml(row.error)}` : connected ? `공식 자동 동기화 · ${accountSummary}` : "공식 연결 대기")
       : row.mode === "adapter"
         ? `로컬 자동 어댑터 · ${accountSummary}`
         : "공식 자동 커넥터가 제공되면 활성화됩니다";
@@ -32,6 +34,8 @@ async function render() {
         <div class="value">${percent}</div>
         <div class="actions">
           ${row.id === "claude" ? `<button class="${row.connectorInstalled ? "danger disconnect-claude" : "connect-claude"}">${row.connectorInstalled ? "연결 해제" : "Claude 자동 연결"}</button>` : ""}
+          ${row.id === "cursor" && !row.connectorInstalled ? `<input class="cursor-key" type="password" maxlength="512" autocomplete="off" spellcheck="false" aria-label="Cursor Team Admin API key" placeholder="Cursor Team Admin API key" /><button class="connect-cursor">Cursor 팀 연결</button>` : ""}
+          ${row.id === "cursor" && row.connectorInstalled ? `<button class="danger disconnect-cursor">연결 해제</button>` : ""}
           ${row.usageUrl ? `<button class="secondary open">공식 사용량 화면</button>` : ""}
         </div>
       </section>`;
@@ -54,6 +58,13 @@ root.addEventListener("click", async (event) => {
       await render();
     } else if (event.target.classList.contains("disconnect-claude")) {
       await window.agentHeadroom.removeClaude();
+      await render();
+    } else if (event.target.classList.contains("connect-cursor")) {
+      const apiKey = card.querySelector(".cursor-key")?.value ?? "";
+      await window.agentHeadroom.installCursor(apiKey);
+      await render();
+    } else if (event.target.classList.contains("disconnect-cursor")) {
+      await window.agentHeadroom.removeCursor();
       await render();
     }
   } catch (error) {

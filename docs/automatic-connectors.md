@@ -10,12 +10,12 @@ AgentHeadroom displays only values obtained through a documented, automatic sour
 | Claude Code | Claude Code status-line `rate_limits` input | Built in; user enables it once, then values refresh after Claude responses |
 | Gemini CLI | Gemini CLI `/stats model` quota view | Connector pending until a stable machine-readable query is available |
 | GitHub Copilot | GitHub Billing Usage REST API | Connector pending; personal and organization authorization differ |
-| Cursor | Cursor Admin API usage/spend endpoints | Connector pending; team admins only, and not equivalent to personal subscription headroom |
+| Cursor | Cursor Admin API `/teams/spend` | Built in for team admins; compares enforced per-user on-demand spend limits, not personal subscription headroom |
 | Grok / Windsurf | No verified public remaining-quota interface | Waiting for an official interface |
 
 ## Rules
 
-- Never read browser cookies, private application databases, OAuth session files, chat transcripts, or OS credential stores.
+- Never scan browser cookies, private application databases, OAuth session files, chat transcripts, or unrelated OS credentials.
 - Never automate a hidden web endpoint or scrape a provider dashboard.
 - API credentials must be connected explicitly and stored through an OS-provided secure mechanism before a built-in cloud connector ships.
 - Local adapters must produce Adapter Protocol v1 snapshots and clearly disclose their own authentication behavior.
@@ -28,3 +28,9 @@ Claude Code documents `rate_limits.five_hour` and `rate_limits.seven_day` as opt
 The lightweight Node.js bridge writes only window labels, remaining percentages, reset timestamps, and the generation time. It discards every other status-line field. It also prints a compact quota summary back to Claude Code so enabling the bridge produces a useful status line instead of an empty row. A `node` executable in PATH is required; AgentHeadroom validates it before changing Claude settings.
 
 AgentHeadroom refuses to replace an existing status-line command. Disconnecting removes the command only when it still exactly matches the command AgentHeadroom installed.
+
+## Cursor Team Admin API
+
+Cursor documents `spendCents` as current-cycle on-demand spend and `effectivePerUserLimitDollars` as the enforced per-user spending limit. AgentHeadroom divides those two official values to calculate remaining headroom for each team member. `overallSpendCents` is deliberately not used because it also includes subscription-included usage.
+
+The team admin pastes an Admin API key into settings explicitly. AgentHeadroom validates it against the official endpoint before saving it, encrypts it through Electron `safeStorage`, and refuses the connection when an OS-backed secure store is unavailable. On Linux, the insecure `basic_text` backend is rejected. The connector refreshes at most every 15 minutes during normal operation and never persists the API response.

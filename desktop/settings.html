@@ -15,10 +15,9 @@
       .name { font-weight: 700; }
       .meta { margin-top: 4px; color: color-mix(in srgb, CanvasText 58%, transparent); font-size: 12px; }
       .value { align-self: center; font-size: 24px; font-weight: 750; font-variant-numeric: tabular-nums; }
-      .actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+      .actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       input { min-width: 0; padding: 8px 10px; border: 1px solid color-mix(in srgb, CanvasText 20%, transparent); border-radius: 8px; background: Canvas; color: CanvasText; }
-      input[type=number] { width: 84px; }
-      input[type=datetime-local] { width: 190px; }
+      .cursor-key { flex: 1 1 230px; }
       button { padding: 8px 11px; border: 0; border-radius: 8px; background: #5b66e8; color: white; cursor: pointer; font-weight: 650; }
       button.secondary { border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); background: transparent; color: CanvasText; }
       button.danger { background: transparent; color: #e5484d; }
@@ -33,7 +32,7 @@
     <div class="toolbar"><button id="open-adapters">자동 어댑터 폴더 열기</button></div>
     <p class="message" id="message" role="status"></p>
     <main id="providers"></main>
-    <p class="notice">로그인 쿠키·세션 토큰·대화 기록을 몰래 읽지 않습니다. 공식 구조화 조회가 없는 서비스는 숫자를 추정하지 않고 연동 대기로 표시합니다.</p>
+    <p class="notice">로그인 쿠키·세션 토큰·대화 기록을 몰래 읽지 않습니다. 직접 연결한 API 키만 운영체제 보안 저장소로 암호화하며, 안전한 저장소가 없으면 연결을 거부합니다. 공식 구조화 조회가 없는 서비스는 숫자를 추정하지 않습니다.</p>
     <script src="./settings.js"></script>
   </body>
 </html>
