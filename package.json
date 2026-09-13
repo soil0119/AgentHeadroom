@@ -11,7 +11,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test desktop/test/*.test.mjs",
-    "check:syntax": "node --check desktop/main.mjs && node --check desktop/core.mjs && node --check desktop/adapter-runtime.mjs && node --check desktop/providers.mjs && node --check desktop/settings.js",
+    "check:syntax": "node --check desktop/main.mjs && node --check desktop/core.mjs && node --check desktop/adapter-runtime.mjs && node --check desktop/providers.mjs && node --check desktop/preload.cjs && node --check desktop/dashboard.js && node --check desktop/settings.js",
     "check:usage": "node desktop/check.mjs",
     "dist:mac": "electron-builder --mac zip --arm64 --x64 --publish never",
     "dist:win": "electron-builder --win nsis --x64 --publish never",

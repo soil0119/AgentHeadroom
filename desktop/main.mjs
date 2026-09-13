@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -7,6 +7,7 @@ import {
   ipcMain,
   Menu,
   nativeImage,
+  screen,
   shell,
   Tray,
 } from "electron";
@@ -15,7 +16,6 @@ import { loadAdapterManifests, runAdapter } from "./adapter-runtime.mjs";
 import {
   adapterSnapshotRows,
   lowestHeadroom,
-  normalizeProviderState,
   overallRemaining,
   providerRows,
   resetSequence,
@@ -37,45 +37,30 @@ let text = {
 };
 
 let tray;
+let trayMenu;
+let dashboardWindow;
 let settingsWindow;
 let refreshTimer;
 let refreshing = false;
 let codexSummary;
 let codexError;
 let lastUpdated;
-let providerState = normalizeProviderState();
 let adapterSnapshots = [];
 let adapterErrors = [];
-
-function statePath() {
-  return path.join(app.getPath("userData"), "providers.json");
-}
 
 function adaptersPath() {
   return process.env.AGENT_HEADROOM_ADAPTERS_DIR
     || path.join(app.getPath("userData"), "adapters");
 }
 
-async function loadState() {
-  try {
-    providerState = normalizeProviderState(JSON.parse(await readFile(statePath(), "utf8")));
-  } catch {
-    providerState = normalizeProviderState();
-  }
-}
-
-async function saveState() {
-  await writeFile(statePath(), `${JSON.stringify(providerState, null, 2)}\n`, "utf8");
-}
-
 function rows() {
   return [
-    ...providerRows({ state: providerState, codexSummary, codexError }),
+    ...providerRows({ codexSummary, codexError }),
     ...adapterSnapshotRows(adapterSnapshots),
   ];
 }
 
-function iconSvg(value, failed = false) {
+function iconSvg(value, failed = false, showNumber = true) {
   const display = failed ? "!" : (Number.isFinite(value) ? String(value) : "··");
   const fontSize = display.length >= 3 ? 24 : 30;
   const accent = failed || value < 15 ? "#E5484D" : value < 35 ? "#E99B3A" : "#5865F2";
@@ -85,18 +70,38 @@ function iconSvg(value, failed = false) {
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
       <path d="M32 9 V4 M32 4 L40 1" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>
-      <rect x="4" y="10" width="56" height="51" rx="17" fill="${accent}"/>
+      <rect x="4" y="10" width="56" height="${showNumber ? 51 : 46}" rx="17" fill="${accent}"/>
       ${eyes}
-      <text x="32" y="51" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
-        font-size="${fontSize}" font-weight="700" fill="white">${display}</text>
+      ${showNumber ? `<text x="32" y="51" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+        font-size="${fontSize}" font-weight="700" fill="white">${display}</text>` : '<path d="M18 39 Q32 49 46 39" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>'}
     </svg>`;
 }
 
 function makeIcon(value, failed = false) {
-  const encoded = Buffer.from(iconSvg(value, failed)).toString("base64");
-  return nativeImage
+  const showNumber = process.platform !== "darwin";
+  const encoded = Buffer.from(iconSvg(value, failed, showNumber)).toString("base64");
+  const image = nativeImage
     .createFromDataURL(`data:image/svg+xml;base64,${encoded}`)
     .resize({ width: 32, height: 32 });
+  if (process.platform === "darwin") image.setTemplateImage(true);
+  return image;
+}
+
+function dashboardData() {
+  const providers = rows();
+  const lowest = lowestHeadroom(providers);
+  return {
+    headlineRemainingPercent: overallRemaining(providers),
+    providers,
+    lowest: lowest ? {
+      providerName: lowest.provider.name,
+      accountLabel: lowest.account.label,
+      limitLabel: lowest.limit.label,
+      remainingPercent: lowest.limit.remainingPercent,
+    } : null,
+    resets: resetSequence(providers),
+    lastUpdated: lastUpdated?.toISOString() ?? null,
+  };
 }
 
 function rebuildMenu() {
@@ -112,7 +117,7 @@ function rebuildMenu() {
     { type: "separator" },
   ];
 
-  for (const provider of providers) {
+  for (const provider of providers.filter((item) => item.accounts.length > 0 || item.error)) {
     const status = Number.isFinite(provider.remainingPercent)
       ? `${provider.remainingPercent}% ${text.remaining}`
       : (provider.error ?? text.unavailable);
@@ -167,17 +172,21 @@ function rebuildMenu() {
     { label: text.quit, role: "quit" },
   );
 
-  tray.setContextMenu(Menu.buildFromTemplate(items));
+  trayMenu = Menu.buildFromTemplate(items);
 }
 
 function updateTray() {
   const headline = overallRemaining(rows());
   const hasAny = Number.isFinite(headline);
   tray.setImage(makeIcon(headline, !hasAny && Boolean(codexError)));
+  if (process.platform === "darwin") {
+    tray.setTitle(hasAny ? ` ${headline}%` : " …");
+  }
   tray.setToolTip(hasAny
     ? `AgentHeadroom · ${headline}% ${text.remaining}`
     : text.loading);
   rebuildMenu();
+  dashboardWindow?.webContents.send("dashboard:changed");
 }
 
 async function refresh() {
@@ -220,7 +229,7 @@ function openSettings() {
     title: "AgentHeadroom",
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(moduleDirectory, "preload.mjs"),
+      preload: path.join(moduleDirectory, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -230,41 +239,89 @@ function openSettings() {
   settingsWindow.on("closed", () => { settingsWindow = null; });
 }
 
+function positionDashboard() {
+  if (!dashboardWindow || dashboardWindow.isDestroyed()) return;
+  const trayBounds = tray.getBounds();
+  const display = screen.getDisplayNearestPoint({
+    x: Math.round(trayBounds.x + trayBounds.width / 2),
+    y: Math.round(trayBounds.y + trayBounds.height / 2),
+  });
+  const workArea = display.workArea;
+  const [windowWidth, windowHeight] = dashboardWindow.getSize();
+  const centeredX = Math.round(trayBounds.x + trayBounds.width / 2 - windowWidth / 2);
+  const x = Math.max(workArea.x + 8, Math.min(centeredX, workArea.x + workArea.width - windowWidth - 8));
+  const trayIsAboveCenter = trayBounds.y < display.bounds.y + display.bounds.height / 2;
+  const proposedY = trayIsAboveCenter
+    ? trayBounds.y + trayBounds.height + 6
+    : trayBounds.y - windowHeight - 6;
+  const y = Math.max(workArea.y + 6, Math.min(proposedY, workArea.y + workArea.height - windowHeight - 6));
+  dashboardWindow.setPosition(x, y, false);
+}
+
+function createDashboard() {
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) return dashboardWindow;
+  dashboardWindow = new BrowserWindow({
+    width: 420,
+    height: 520,
+    show: false,
+    frame: false,
+    resizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    hasShadow: true,
+    transparent: process.platform === "darwin",
+    backgroundColor: process.platform === "darwin" ? "#00000000" : "#f5f5f7",
+    ...(process.platform === "darwin" ? { vibrancy: "popover", visualEffectState: "active" } : {}),
+    webPreferences: {
+      preload: path.join(moduleDirectory, "preload.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+  void dashboardWindow.loadFile(path.join(moduleDirectory, "dashboard.html"));
+  dashboardWindow.on("blur", () => {
+    if (!settingsWindow?.isFocused()) dashboardWindow?.hide();
+  });
+  dashboardWindow.on("closed", () => { dashboardWindow = null; });
+  return dashboardWindow;
+}
+
+function toggleDashboard() {
+  const window = createDashboard();
+  if (window.isVisible()) {
+    window.hide();
+    return;
+  }
+  positionDashboard();
+  window.show();
+  window.focus();
+  window.webContents.send("dashboard:changed");
+}
+
 function registerIpc() {
+  ipcMain.handle("dashboard:get", () => dashboardData());
+  ipcMain.handle("dashboard:refresh", async () => {
+    await refresh();
+    return dashboardData();
+  });
+  ipcMain.handle("dashboard:open-settings", () => {
+    dashboardWindow?.hide();
+    openSettings();
+  });
+  ipcMain.handle("dashboard:quit", () => app.quit());
+  ipcMain.handle("dashboard:resize", (_event, { height }) => {
+    if (!dashboardWindow || dashboardWindow.isDestroyed()) return;
+    const safeHeight = Math.max(250, Math.min(720, Math.ceil(Number(height) || 520)));
+    dashboardWindow.setSize(420, safeHeight, false);
+    positionDashboard();
+  });
   ipcMain.handle("providers:get", () => rows());
-  ipcMain.handle("providers:save-manual", async (_event, { id, remainingPercent, resetsAt }) => {
-    const rawValue = String(remainingPercent ?? "").trim();
-    const value = rawValue ? Math.min(100, Math.max(0, Math.round(Number(rawValue)))) : Number.NaN;
-    const provider = rows().find((item) => item.id === id && item.mode === "manual");
-    if (!provider || !Number.isFinite(value)) throw new Error("Invalid provider value");
-    const resetNumber = Number(resetsAt);
-    providerState.manual[id] = {
-      remainingPercent: value,
-      resetsAt: Number.isFinite(resetNumber) && resetNumber > 0 ? resetNumber : null,
-      updatedAt: new Date().toISOString(),
-    };
-    await saveState();
-    updateTray();
-    return rows();
-  });
-  ipcMain.handle("providers:add-custom", async (_event, { name, usageUrl }) => {
-    const cleanName = String(name ?? "").trim().slice(0, 60);
-    if (!cleanName) throw new Error("Provider name is required");
-    const cleanUrl = String(usageUrl ?? "").trim();
-    if (cleanUrl && !/^https:\/\//i.test(cleanUrl)) throw new Error("Only HTTPS links are allowed");
-    const id = `custom-${Date.now().toString(36)}`;
-    providerState.custom.push({ id, name: cleanName, mode: "manual", usageUrl: cleanUrl || null });
-    await saveState();
-    updateTray();
-    return rows();
-  });
-  ipcMain.handle("providers:remove-custom", async (_event, { id }) => {
-    if (!String(id).startsWith("custom-")) throw new Error("Built-in providers cannot be removed");
-    providerState.custom = providerState.custom.filter((item) => item.id !== id);
-    delete providerState.manual[id];
-    await saveState();
-    updateTray();
-    return rows();
+  ipcMain.handle("providers:open-adapters", async () => {
+    await mkdir(adaptersPath(), { recursive: true });
+    await shell.openPath(adaptersPath());
   });
   ipcMain.handle("providers:open-external", async (_event, { url }) => {
     const provider = rows().find((item) => item.usageUrl === url);
@@ -276,7 +333,7 @@ function registerIpc() {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on("second-instance", openSettings);
+  app.on("second-instance", toggleDashboard);
   app.whenReady().then(async () => {
     if (process.platform === "darwin") app.dock.hide();
     isKorean = app.getLocale().toLowerCase().startsWith("ko");
@@ -296,11 +353,11 @@ if (!app.requestSingleInstanceLock()) {
     if (process.platform === "win32") {
       app.setAppUserModelId("dev.agentheadroom.app");
     }
-    await loadState();
     registerIpc();
     tray = new Tray(makeIcon(null));
     tray.setToolTip(text.loading);
-    tray.on("click", () => tray.popUpContextMenu());
+    tray.on("click", toggleDashboard);
+    tray.on("right-click", () => tray.popUpContextMenu(trayMenu));
     rebuildMenu();
     void refresh();
     refreshTimer = setInterval(() => void refresh(), REFRESH_INTERVAL_MS);

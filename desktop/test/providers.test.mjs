@@ -4,8 +4,8 @@ import { validateAdapterSnapshot } from "../adapter-runtime.mjs";
 import {
   adapterSnapshotRows,
   lowestHeadroom,
-  normalizeProviderState,
   overallRemaining,
+  providerRows,
   resetSequence,
 } from "../providers.mjs";
 
@@ -60,10 +60,9 @@ test("invalid percentages are rejected", () => {
   }));
 });
 
-test("manual provider values are clamped and unknown fields are removed", () => {
-  const state = normalizeProviderState({
-    manual: { grok: { remainingPercent: 120, secret: "do-not-store" } },
-  });
-  assert.deepEqual(state.manual.grok.remainingPercent, 100);
-  assert.equal("secret" in state.manual.grok, false);
+test("providers without an official connector never invent a percentage", () => {
+  const rows = providerRows();
+  const pending = rows.filter((row) => row.mode === "connector");
+  assert.ok(pending.length > 0);
+  assert.ok(pending.every((row) => row.remainingPercent === null && row.accounts.length === 0));
 });

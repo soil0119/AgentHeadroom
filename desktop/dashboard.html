@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgentHeadroom</title>
+    <style>
+      :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; overflow: hidden; color: CanvasText; background: color-mix(in srgb, Canvas 94%, transparent); }
+      .shell { display: flex; flex-direction: column; padding: 20px 22px 14px; border: 1px solid color-mix(in srgb, CanvasText 13%, transparent); border-radius: 24px; box-shadow: 0 22px 64px rgba(0,0,0,.22); }
+      header { display: flex; align-items: center; gap: 13px; padding-bottom: 15px; }
+      .roomie { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 14px; color: white; background: #5965ec; font-size: 23px; }
+      .title { flex: 1; min-width: 0; }
+      h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.02em; }
+      .subtitle { margin-top: 3px; color: color-mix(in srgb, CanvasText 55%, transparent); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .headline { font-size: 36px; line-height: 1; font-weight: 650; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+      #providers { max-height: 410px; overflow: auto; display: grid; align-content: start; gap: 16px; padding: 2px 3px 12px 0; }
+      .provider { padding-top: 1px; }
+      .provider-head, .limit-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+      .provider-name { font-size: 15px; font-weight: 650; }
+      .mode { color: color-mix(in srgb, CanvasText 48%, transparent); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+      .account { margin-top: 10px; }
+      .limit-head { color: color-mix(in srgb, CanvasText 64%, transparent); font-size: 12px; }
+      .limit-head strong { color: CanvasText; font-size: 12px; font-variant-numeric: tabular-nums; }
+      .track { height: 7px; margin-top: 7px; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, CanvasText 10%, transparent); }
+      .fill { height: 100%; border-radius: inherit; background: #5c68ef; }
+      .fill.warn { background: #e99b3a; }
+      .fill.critical { background: #e5484d; }
+      .reset { margin-top: 5px; color: color-mix(in srgb, CanvasText 39%, transparent); font-size: 10px; }
+      .empty { padding: 28px 10px; text-align: center; color: color-mix(in srgb, CanvasText 50%, transparent); font-size: 13px; line-height: 1.55; }
+      .upcoming { margin-top: 3px; padding: 11px 12px; border-radius: 12px; background: color-mix(in srgb, #5965ec 9%, transparent); font-size: 11px; line-height: 1.6; }
+      .upcoming strong { display: block; margin-bottom: 2px; font-size: 11px; }
+      footer { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, CanvasText 11%, transparent); }
+      .updated { flex: 1; color: color-mix(in srgb, CanvasText 43%, transparent); font-size: 11px; }
+      button { display: grid; place-items: center; min-width: 32px; height: 30px; padding: 0 9px; border: 0; border-radius: 9px; color: color-mix(in srgb, CanvasText 68%, transparent); background: transparent; cursor: pointer; font: inherit; }
+      button:hover { color: CanvasText; background: color-mix(in srgb, CanvasText 8%, transparent); }
+      .text-button { font-size: 12px; }
+      @media (prefers-color-scheme: dark) { body { background: rgba(28,29,34,.96); } }
+    </style>
+  </head>
+  <body>
+    <section class="shell">
+      <header>
+        <div class="roomie" id="roomie">•ᴗ•</div>
+        <div class="title"><h1>AgentHeadroom</h1><div class="subtitle" id="subtitle">사용량 확인 중…</div></div>
+        <div class="headline" id="headline">--%</div>
+      </header>
+      <main id="providers"></main>
+      <section class="upcoming" id="upcoming" hidden></section>
+      <footer>
+        <span class="updated" id="updated">업데이트 중…</span>
+        <button id="refresh" aria-label="새로고침" title="새로고침">↻</button>
+        <button id="settings" aria-label="설정" title="에이전트 관리">⚙</button>
+        <button class="text-button" id="quit">종료</button>
+      </footer>
+    </section>
+    <script src="./dashboard.js"></script>
+  </body>
+</html>
